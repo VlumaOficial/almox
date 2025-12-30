@@ -26,7 +26,7 @@ import { Loader2 } from 'lucide-react';
 // Esquema de validação
 const movementSchema = z.object({
   material_id: z.string().min(1, 'O material é obrigatório.'),
-  tipo: z.enum(['entrada', 'ajuste'], {
+  tipo: z.enum(['entrada', 'saida', 'ajuste'], {
     required_error: 'O tipo de movimentação é obrigatório.',
   }),
   quantidade: z.coerce.number().min(1, 'A quantidade deve ser maior que zero.'),
@@ -99,6 +99,7 @@ const MovementForm: React.FC<MovementFormProps> = ({ materials, onSubmit, isPend
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="entrada">Entrada (Recebimento)</SelectItem>
+                    <SelectItem value="saida">Saída (Descarte/Consumo Imediato)</SelectItem>
                     <SelectItem value="ajuste">Ajuste (Inventário/Correção)</SelectItem>
                   </SelectContent>
                 </Select>
