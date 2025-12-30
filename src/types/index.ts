@@ -4,8 +4,8 @@ export type UserProfile = {
   nome: string;
   perfil: 'admin' | 'consulta' | 'retirada';
   assinatura_digital: string | null;
-  created_at: string;
   updated_at: string;
+  created_at: string;
 };
 
 export type Material = {
@@ -40,4 +40,11 @@ export type Movimentacao = {
   created_at: string;
   aprovado_por: string | null;
   aprovado_at: string | null;
+};
+
+// MovementWithDetails now includes all relevant material fields for display/checks
+export type MovementWithDetails = Movimentacao & {
+  material: Pick<Material, 'nome' | 'codigo' | 'unidade_medida' | 'quantidade_atual'>;
+  user: Pick<UserProfile, 'nome' | 'email'>;
+  approver: Pick<UserProfile, 'nome' | 'email'> | null;
 };

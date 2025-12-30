@@ -2,9 +2,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, Users, ListChecks, AlertTriangle } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { usePendingRequests } from "@/hooks/useMovements";
+import { useMaterials } from "@/hooks/useMaterials";
 
 const Index = () => {
   const { profile, isLoading } = useAuth();
+  const { data: pendingRequests = [], isLoading: isLoadingRequests } = usePendingRequests();
+  const { data: materials = [], isLoading: isLoadingMaterials } = useMaterials();
 
   if (isLoading) {
     // O ProtectedRoute já lida com o estado de carregamento, mas mantemos um fallback
@@ -14,6 +18,9 @@ const Index = () => {
   if (!profile) {
     return <div>Erro ao carregar perfil.</div>;
   }
+
+  // Calculate critical materials count
+  const criticalMaterials = materials.filter(m => m.quantidade_atual <= m.quantidade_minima).length;
 
   // Conteúdo do Dashboard (será expandido nos próximos passos)
   const DashboardContent = () => {
@@ -31,9 +38,9 @@ const Index = () => {
                   <Package className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">0</div>
+                  <div className="text-2xl font-bold">{isLoadingMaterials ? '...' : materials.length}</div>
                   <p className="text-xs text-muted-foreground">
-                    (Funcionalidade a ser implementada)
+                    Itens cadastrados
                   </p>
                 </CardContent>
               </Card>
@@ -45,7 +52,7 @@ const Index = () => {
                   <AlertTriangle className="h-4 w-4 text-destructive" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">0</div>
+                  <div className="text-2xl font-bold">{isLoadingMaterials ? '...' : criticalMaterials}</div>
                   <p className="text-xs text-muted-foreground">
                     Abaixo do estoque mínimo
                   </p>
@@ -59,7 +66,7 @@ const Index = () => {
                   <ListChecks className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">0</div>
+                  <div className="text-2xl font-bold">{isLoadingRequests ? '...' : pendingRequests.length}</div>
                   <p className="text-xs text-muted-foreground">
                     Aguardando aprovação
                   </p>
@@ -73,9 +80,9 @@ const Index = () => {
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">1</div>
+                  <div className="text-2xl font-bold">1+</div>
                   <p className="text-xs text-muted-foreground">
-                    (Você é o Admin)
+                    Gerencie em 'Usuários'
                   </p>
                 </CardContent>
               </Card>
@@ -93,7 +100,7 @@ const Index = () => {
             <h2 className="text-2xl font-bold">Dashboard de Retirada</h2>
             <Card className="p-6">
               <h3 className="text-xl font-semibold mb-4">Acesso Rápido</h3>
-              <p>Aqui você poderá solicitar retiradas e ver o status das suas solicitações.</p>
+              <p>Você tem <span className="font-bold text-primary">{isLoadingRequests ? '...' : pendingRequests.length}</span> solicitações pendentes. Acesse "Minhas Retiradas" para gerenciar.</p>
             </Card>
           </div>
         );

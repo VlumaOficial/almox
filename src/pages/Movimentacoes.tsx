@@ -8,9 +8,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import MovementForm from '@/components/movements/MovementForm.tsx';
+import MovementForm from '@/components/movements/MovementForm';
+import MovementTable from '@/components/movements/MovementTable';
 import { useMaterials } from '@/hooks/useMaterials';
-import { useProcessMovement } from '@/hooks/useMovements';
+import { useProcessMovement, useMovementsHistory } from '@/hooks/useMovements';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { ShieldAlert } from 'lucide-react';
@@ -18,6 +19,7 @@ import { ShieldAlert } from 'lucide-react';
 const Movimentacoes = () => {
   const { profile } = useAuth();
   const { data: materials = [], isLoading: isLoadingMaterials } = useMaterials();
+  const { data: movements = [], isLoading: isLoadingMovements } = useMovementsHistory();
   const processMovementMutation = useProcessMovement();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -79,9 +81,10 @@ const Movimentacoes = () => {
         )}
       </div>
 
-      <p className="text-muted-foreground">
-        Tabela de histórico de movimentações será adicionada aqui.
-      </p>
+      <MovementTable 
+        movements={movements} 
+        isLoading={isLoadingMovements} 
+      />
     </div>
   );
 };
