@@ -24,26 +24,26 @@ import {
 import { Loader2 } from 'lucide-react';
 
 // Esquema de validação
-const movementSchema = z.object({
+const adminMovementSchema = z.object({
   material_id: z.string().min(1, 'O material é obrigatório.'),
-  tipo: z.enum(['entrada', 'saida', 'ajuste'], {
+  tipo: z.enum(['entrada', 'saida', 'ajuste', 'solicitacao_saida'], {
     required_error: 'O tipo de movimentação é obrigatório.',
   }),
   quantidade: z.coerce.number().min(1, 'A quantidade deve ser maior que zero.'),
   observacao: z.string().optional(),
 });
 
-type MovementFormValues = z.infer<typeof movementSchema>;
+type AdminMovementFormValues = z.infer<typeof adminMovementSchema>;
 
-interface MovementFormProps {
+interface AdminMovementFormProps {
   materials: Material[];
-  onSubmit: (data: MovementFormValues) => void;
+  onSubmit: (data: AdminMovementFormValues) => void;
   isPending: boolean;
 }
 
-const MovementForm: React.FC<MovementFormProps> = ({ materials, onSubmit, isPending }) => {
-  const form = useForm<MovementFormValues>({
-    resolver: zodResolver(movementSchema),
+const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubmit, isPending }) => {
+  const form = useForm<AdminMovementFormValues>({
+    resolver: zodResolver(adminMovementSchema),
     defaultValues: {
       material_id: '',
       tipo: 'entrada',
@@ -52,9 +52,13 @@ const MovementForm: React.FC<MovementFormProps> = ({ materials, onSubmit, isPend
     },
   });
 
-  const handleSubmit = (values: MovementFormValues) => {
+  const handleSubmit = (values: AdminMovementFormValues) => {
     onSubmit(values);
   };
+
+  const selectedType = form.watch('tipo');
+  const isDirectMovement = selectedType === 'entrada' || selectedType === 'ajuste';
+  const isWithdrawalRequest = selectedType === 'solicitacao_saida';
 
   return (
     <Form {...form}>
@@ -90,7 +94,7 @@ const MovementForm: React.FC<MovementFormProps> = ({ materials, onSubmit, isPend
             name="tipo"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Tipo</FormLabel>
+                <FormLabel>Tipo de Ação</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
@@ -98,9 +102,9 @@ const MovementForm: React.FC<MovementFormProps> = ({ materials, onSubmit, isPend
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="entrada">Entrada (Recebimento)</SelectItem>
-                    <SelectItem value="saida">Saída (Descarte/Consumo Imediato)</SelectItem>
-                    <SelectItem value="ajuste">Ajuste (Inventário/Correção)</SelectItem>
+                    <SelectItem value="entrada">Entrada (Recebimento Direto)</SelectItem>
+                    <SelectItem value="ajuste">Ajuste (Correção de Estoque Direta)</SelectItem>
+                    <SelectItem value="solicitacao_saida">Solicitação de Retirada (Pendente)</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -130,7 +134,7 @@ const MovementForm: React.FC<MovementFormProps> = ({ materials, onSubmit, isPend
             <FormItem>
               <FormLabel>Observação (Opcional)</FormLabel>
               <FormControl>
-                <Textarea placeholder="Motivo da movimentação..." {...field} />
+                <Textarea placeholder="Motivo da movimentação/solicitação..." {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -144,7 +148,7 @@ const MovementForm: React.FC<MovementFormProps> = ({ materials, onSubmit, isPend
               Processando...
             </>
           ) : (
-            'Registrar Movimentação'
+            isWithdrawalRequest ? 'Criar Solicitação Pendente' : 'Registrar Movimentação Direta'
           )}
         </Button>
       </form>
@@ -152,4 +156,4 @@ const MovementForm: React.FC<MovementFormProps> = ({ materials, onSubmit, isPend
   );
 };
 
-export default MovementForm;
+export default AdminMovementForm;

@@ -37,6 +37,8 @@ const Login = () => {
           }}
           theme="light"
           view="sign_in"
+          // Adicionando o 'sign_up' para permitir o cadastro
+          redirectTo={window.location.origin}
           localization={{
             variables: {
               sign_in: {
@@ -44,13 +46,13 @@ const Login = () => {
                 password_label: 'Senha',
                 button_label: 'Entrar',
                 social_provider_text: 'Ou entre com',
-                link_text: 'Já tem uma conta? Entre',
+                link_text: 'Não tem uma conta? Cadastre-se', // Alterado para linkar para sign_up
               },
               sign_up: {
                 email_label: 'Email',
                 password_label: 'Senha',
                 button_label: 'Cadastrar',
-                link_text: 'Não tem uma conta? Cadastre-se',
+                link_text: 'Já tem uma conta? Entre',
               },
               forgotten_password: {
                 link_text: 'Esqueceu sua senha?',
