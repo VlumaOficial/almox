@@ -26,7 +26,9 @@ import { Loader2 } from 'lucide-react';
 const userSchema = z.object({
   nome: z.string().min(1, 'O nome é obrigatório.'),
   email: z.string().email('Email inválido.'),
-  password: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres.').optional().or(z.literal('')),
+  // Tornando a senha obrigatória para garantir que o usuário possa fazer login imediatamente,
+  // contornando problemas de configuração de email de convite do Supabase.
+  password: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres.'),
   perfil: z.enum(['admin', 'consulta', 'retirada'], {
     required_error: 'O perfil é obrigatório.',
   }),
@@ -57,9 +59,8 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isPending }) => {
   });
 
   const handleSubmit = (values: UserFormValues) => {
-    // Remove a senha se estiver vazia (para enviar convite)
-    const payload = values.password ? values : { ...values, password: undefined };
-    onSubmit(payload);
+    // A senha agora é obrigatória, então enviamos o payload completo.
+    onSubmit(values);
   };
 
   return (
@@ -96,9 +97,9 @@ const UserForm: React.FC<UserFormProps> = ({ onSubmit, isPending }) => {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Senha (Opcional)</FormLabel>
+              <FormLabel>Senha</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="Deixe vazio para enviar convite por email" {...field} />
+                <Input type="password" placeholder="Defina uma senha temporária" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
