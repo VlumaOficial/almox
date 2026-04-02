@@ -19,10 +19,10 @@ const Configuracoes = () => {
     setIsResetting(true);
     try {
       // Aqui vamos chamar uma Edge Function para resetar o banco
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reset-database`, {
+      const response = await fetch('https://xleljhiyuhtvzjlxzawy.supabase.co/functions/v1/reset-database', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1cGFiYXNlLWRlbW8iLCJ0eXBlIjoic2VydmljZV9yb2xlIiwiYXVkIjoiYXV0aCIsImlhdCI6MTczMDQ0MjYwMCwiZXhwIjoyMDQ4NzgyMDAwfQ.M8Kk7h9L7QfXJnXQx5F3k2fB9m8oJ5hT6W3nF8kGc`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
