@@ -41,6 +41,7 @@ export type Movimentacao = {
   assinatura_retirada: string | null;
   status: MovimentacaoStatus;
   created_at: string;
+  updated_at: string;  // ✅ ADICIONADO
   aprovado_por: string | null;
   aprovado_at: string | null;
 };

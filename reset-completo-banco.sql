@@ -13,22 +13,21 @@
 -- ETAPA 1: VERIFICAÇÃO DE SEGURANÇA
 -- =====================================================
 
--- Verificar se você é o admin
+-- Verificar se admin@admin.com.br existe
 DO $$
 DECLARE
     admin_email TEXT := 'admin@admin.com.br';
-    current_user_email TEXT;
+    admin_count INTEGER;
 BEGIN
-    SELECT email INTO current_user_email 
-    FROM profiles 
-    WHERE perfil = 'admin' 
-    LIMIT 1;
+    SELECT COUNT(*) INTO admin_count FROM profiles WHERE email = admin_email;
     
-    IF current_user_email != admin_email THEN
-        RAISE EXCEPTION 'Acesso negado! Apenas admin@admin.com.br pode executar este script.';
+    IF admin_count = 0 THEN
+        RAISE EXCEPTION 'Admin % não encontrado! Verifique se o usuário existe.', admin_email;
     END IF;
     
     RAISE NOTICE '✅ Verificação de segurança aprovada para: %', admin_email;
+    RAISE NOTICE '⚠️ ATENÇÃO: Você está prestes a resetar o banco de dados!';
+    RAISE NOTICE '⚠️ Esta ação é IRREVERSÍVEL e apagará TODOS os dados!';
 END $$;
 
 -- =====================================================
