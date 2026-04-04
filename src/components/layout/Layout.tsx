@@ -14,18 +14,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-muted/40">
+    <div className="min-h-screen bg-muted/40 flex">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       
       <div 
         className={cn(
-          "flex flex-col w-full transition-all duration-300",
+          "flex flex-col flex-1 w-full transition-all duration-300",
           !isMobile ? "ml-64" : "ml-0"
         )}
       >
         <Header setIsOpen={setIsSidebarOpen} />
         
-        <main className="flex-1 p-4 md:p-6">
+        <main className="flex-1 p-4 md:p-6 pb-8">
           {children}
         </main>
         

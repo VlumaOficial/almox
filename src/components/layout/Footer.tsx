@@ -5,7 +5,7 @@ const Footer = () => {
   const { data: logoUrl } = useLogoUrl();
 
   return (
-    <footer className="border-t border-border bg-background py-6 mt-auto">
+    <footer className="border-t border-border bg-background py-6 mt-8">
       <div className="container mx-auto px-4">
         <div className="flex flex-col items-center space-y-4">
           {/* Logo e Link */}
@@ -23,7 +23,7 @@ const Footer = () => {
               href="https://www.vluma.com.br" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors underline"
             >
               www.vluma.com.br
             </a>
