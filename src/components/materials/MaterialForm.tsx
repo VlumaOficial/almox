@@ -130,7 +130,7 @@ const MaterialForm: React.FC<MaterialFormProps> = ({ initialData, onSubmit, isPe
               <FormItem>
                 <FormLabel>Estoque Mínimo</FormLabel>
                 <FormControl>
-                  <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} />
+                  <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -144,7 +144,7 @@ const MaterialForm: React.FC<MaterialFormProps> = ({ initialData, onSubmit, isPe
                 <FormItem>
                   <FormLabel>Estoque Inicial</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} />
+                    <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
