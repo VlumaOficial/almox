@@ -5,7 +5,24 @@ import { showError, showSuccess } from '@/utils/toast';
 
 const MATERIALS_QUERY_KEY = ['materials'];
 const MOVEMENTS_QUERY_KEY = ['movements'];
-const BULK_UPDATE_FUNCTION_URL = 'https://xleljhiyuhtvzjlxzawy.supabase.co/functions/v1/bulk-stock-update';
+const BULK_UPDATE_FUNCTION_URL = 'https://fuqlwkhucfbhpjlmxaeu.supabase.co/functions/v1/bulk-stock-update'; // CORRIGIDO
+
+// --- Função auxiliar para buscar organization_id do usuário logado ---
+const getUserOrganizationId = async (): Promise<string> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Usuário não autenticado.');
+
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('organization_id')
+    .eq('id', user.id)
+    .single();
+
+  if (error || !profile?.organization_id) {
+    throw new Error('Organização do usuário não encontrada.');
+  }
+  return profile.organization_id;
+};
 
 // --- Fetch ---
 const fetchMaterials = async (): Promise<Material[]> => {
@@ -14,9 +31,7 @@ const fetchMaterials = async (): Promise<Material[]> => {
     .select('*')
     .order('nome', { ascending: true });
 
-  if (error) {
-    throw new Error(error.message);
-  }
+  if (error) throw new Error(error.message);
   return data as Material[];
 };
 
@@ -33,30 +48,30 @@ type MaterialPayload = Omit<Material, 'id' | 'created_at' | 'updated_at' | 'quan
 };
 
 const createMaterial = async (material: MaterialPayload): Promise<Material> => {
+  const organization_id = await getUserOrganizationId(); // INJETADO AUTOMATICAMENTE
+
   const { data, error } = await supabase
     .from('materiais')
-    .insert(material)
+    .insert({ ...material, organization_id })
     .select()
     .single();
 
-  if (error) {
-    throw new Error(error.message);
-  }
+  if (error) throw new Error(error.message);
   return data as Material;
 };
 
 const updateMaterial = async (material: Material): Promise<Material> => {
+  const organization_id = await getUserOrganizationId(); // INJETADO AUTOMATICAMENTE
+
   const { id, ...updates } = material;
   const { data, error } = await supabase
     .from('materiais')
-    .update(updates)
+    .update({ ...updates, organization_id })
     .eq('id', id)
     .select()
     .single();
 
-  if (error) {
-    throw new Error(error.message);
-  }
+  if (error) throw new Error(error.message);
   return data as Material;
 };
 
@@ -95,9 +110,7 @@ const deleteMaterial = async (id: string): Promise<void> => {
     .delete()
     .eq('id', id);
 
-  if (error) {
-    throw new Error(error.message);
-  }
+  if (error) throw new Error(error.message);
 };
 
 export const useDeleteMaterial = () => {
@@ -135,10 +148,8 @@ interface BulkUpdateResponse {
 
 const bulkUpdateStock = async (items: BulkItem[]): Promise<BulkUpdateResponse> => {
   const { data: { session } } = await supabase.auth.getSession();
-  
-  if (!session) {
-    throw new Error('Usuário não autenticado.');
-  }
+
+  if (!session) throw new Error('Usuário não autenticado.');
 
   const response = await fetch(BULK_UPDATE_FUNCTION_URL, {
     method: 'POST',
@@ -166,7 +177,7 @@ export const useBulkUpdateStock = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: MATERIALS_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: MOVEMENTS_QUERY_KEY });
-      
+
       let message = `Carga em massa concluída: ${data.createdCount} novos materiais, ${data.updatedCount} estoques atualizados.`;
       if (data.errors.length > 0) {
         message += ` ${data.errors.length} itens com erro.`;
