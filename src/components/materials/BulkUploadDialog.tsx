@@ -174,7 +174,7 @@ const BulkUploadDialog: React.FC<BulkUploadDialogProps> = ({ isOpen, onOpenChang
       setFile(null);
       setPreview([]);
     } catch (e) {
-      setParsingError(e instanceof Error ? e.message : 'Erro desconhecido.');
+      setParsingError(e instanceof Error ? e.message : JSON.stringify(e));
     }
   };
 
