@@ -22,8 +22,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
+import MaterialSearchSelect from './MaterialSearchSelect';
 
-// Esquema de validação
 const adminMovementSchema = z.object({
   material_id: z.string().min(1, 'O material é obrigatório.'),
   tipo: z.enum(['entrada', 'saida', 'ajuste', 'solicitacao_saida'], {
@@ -57,7 +57,6 @@ const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubm
   };
 
   const selectedType = form.watch('tipo');
-  const isDirectMovement = selectedType === 'entrada' || selectedType === 'ajuste';
   const isWithdrawalRequest = selectedType === 'solicitacao_saida';
 
   return (
@@ -70,20 +69,14 @@ const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubm
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Material</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o Material" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {materials.map((material) => (
-                      <SelectItem key={material.id} value={material.id}>
-                        {material.nome} ({material.codigo})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <MaterialSearchSelect
+                    materials={materials}
+                    value={field.value}
+                    onChange={field.onChange}
+                    showStock={false}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -119,7 +112,7 @@ const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubm
               <FormItem>
                 <FormLabel>Quantidade</FormLabel>
                 <FormControl>
-                  <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} />
+                  <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

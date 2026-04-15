@@ -22,8 +22,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
+import MaterialSearchSelect from './MaterialSearchSelect';
 
-// Esquema de validação
 const userMovementSchema = z.object({
   material_id: z.string().min(1, 'O material é obrigatório.'),
   tipo: z.enum(['entrada', 'saida'], {
@@ -46,7 +46,7 @@ const UserMovementForm: React.FC<UserMovementFormProps> = ({ materials, onSubmit
     resolver: zodResolver(userMovementSchema),
     defaultValues: {
       material_id: '',
-      tipo: 'saida', // Default para retirada
+      tipo: 'saida',
       quantidade: 1,
       observacao: '',
     },
@@ -89,20 +89,14 @@ const UserMovementForm: React.FC<UserMovementFormProps> = ({ materials, onSubmit
           render={({ field }) => (
             <FormItem>
               <FormLabel>Material</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o Material" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {materials.map((material) => (
-                    <SelectItem key={material.id} value={material.id}>
-                      {material.nome} ({material.codigo}) - Estoque: {material.quantidade_atual} {material.unidade_medida}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <MaterialSearchSelect
+                  materials={materials}
+                  value={field.value}
+                  onChange={field.onChange}
+                  showStock={true}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -115,7 +109,7 @@ const UserMovementForm: React.FC<UserMovementFormProps> = ({ materials, onSubmit
             <FormItem>
               <FormLabel>Quantidade Solicitada</FormLabel>
               <FormControl>
-                <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} />
+                <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value) || 0)} />
               </FormControl>
               <FormMessage />
             </FormItem>
