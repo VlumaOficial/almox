@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import MovementTable from '@/components/movements/MovementTable';
 import { useMaterials } from '@/hooks/useMaterials';
-import { useProcessMovement, useMovementsHistory, useCreateUserRequest } from '@/hooks/useMovements';
+import { useProcessMovement, useMovementsHistory } from '@/hooks/useMovements';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useAuth } from '@/contexts/AuthContext';
 import { ShieldAlert } from 'lucide-react';
@@ -20,10 +20,8 @@ const Movimentacoes = () => {
   const { profile } = useAuth();
   const { data: materials = [], isLoading: isLoadingMaterials } = useMaterials();
   const { data: movements = [], isLoading: isLoadingMovements } = useMovementsHistory();
-  
-  // Mutations
-  const processMovementMutation = useProcessMovement(); // Para Entrada/Ajuste (direto)
-  const requestWithdrawalMutation = useCreateUserRequest(); // Para Solicitação de Saída (pendente)
+
+  const processMovementMutation = useProcessMovement();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -40,29 +38,22 @@ const Movimentacoes = () => {
   }
 
   const handleSubmit = (values: any) => {
-    const { tipo, ...payload } = values;
-
-    if (tipo === 'solicitacao_saida') {
-      // Cria uma solicitação de retirada (status: pendente)
-      requestWithdrawalMutation.mutate(payload, {
-        onSuccess: () => {
-          setIsDialogOpen(false);
-        },
-      });
-    } else {
-      // Processa movimentação direta (entrada ou ajuste)
-      // Se for 'ajuste' ou 'entrada', usamos processMovementMutation.
-      processMovementMutation.mutate({ ...payload, tipo: tipo === 'ajuste' ? 'ajuste' : 'entrada' }, {
-        onSuccess: () => {
-          setIsDialogOpen(false);
-        },
-      });
-    }
+    // Envia o tipo exatamente como veio do formulário (entrada, saida ou ajuste)
+    processMovementMutation.mutate({
+      material_id: values.material_id,
+      tipo: values.tipo,
+      quantidade: values.quantidade,
+      ajuste_tipo: values.ajuste_tipo,
+      observacao: values.observacao,
+    }, {
+      onSuccess: () => {
+        setIsDialogOpen(false);
+      },
+    });
   };
 
-  // Apenas administradores podem registrar movimentações ou solicitações
   const canRegisterMovement = profile?.perfil === 'admin';
-  const isPending = processMovementMutation.isPending || requestWithdrawalMutation.isPending;
+  const isPending = processMovementMutation.isPending;
 
   return (
     <div className="space-y-6">
@@ -73,7 +64,7 @@ const Movimentacoes = () => {
             <DialogTrigger asChild>
               <Button>
                 <PlusCircle className="mr-2 h-4 w-4" />
-                Nova Movimentação/Solicitação
+                Nova Movimentação
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px]">
@@ -99,9 +90,9 @@ const Movimentacoes = () => {
         )}
       </div>
 
-      <MovementTable 
-        movements={movements} 
-        isLoading={isLoadingMovements} 
+      <MovementTable
+        movements={movements}
+        isLoading={isLoadingMovements}
       />
     </div>
   );
