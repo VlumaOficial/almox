@@ -11,6 +11,7 @@ interface ProcessMovementPayload {
   material_id: string;
   tipo: MovimentacaoTipo;
   quantidade: number;
+  ajuste_tipo?: 'adicionar' | 'subtrair';
   observacao?: string;
 }
 

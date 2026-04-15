@@ -7,24 +7,22 @@ const corsHeaders = {
   'Content-Type': 'application/json',
 };
 
-// Tipos de dados esperados
 interface MovementPayload {
   material_id: string;
   user_id: string;
   tipo: 'entrada' | 'saida' | 'ajuste';
   quantidade: number;
+  ajuste_tipo?: 'adicionar' | 'subtrair'; // novo campo para ajuste
   observacao?: string;
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   let supabaseClient;
   try {
-    // Manual authentication handling
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Unauthorized: Missing Authorization header' }), {
@@ -33,7 +31,6 @@ serve(async (req) => {
       });
     }
 
-    // Create Supabase client with the user's JWT
     supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -53,7 +50,7 @@ serve(async (req) => {
     }
 
     const body: MovementPayload = await req.json();
-    const { material_id, tipo, quantidade, observacao } = body;
+    const { material_id, tipo, quantidade, ajuste_tipo, observacao } = body;
     const user_id = user.id;
 
     if (!material_id || !tipo || typeof quantidade !== 'number' || quantidade <= 0) {
@@ -63,7 +60,7 @@ serve(async (req) => {
       });
     }
 
-    // 1. Buscar o material atual para obter a quantidade_anterior
+    // Buscar quantidade atual do material
     const { data: material, error: fetchError } = await supabaseClient
       .from('materiais')
       .select('quantidade_atual')
@@ -71,8 +68,7 @@ serve(async (req) => {
       .single();
 
     if (fetchError || !material) {
-      console.error('Erro ao buscar material:', fetchError?.message);
-      return new Response(JSON.stringify({ error: 'Material não encontrado ou erro ao buscar dados.' }), {
+      return new Response(JSON.stringify({ error: 'Material não encontrado.' }), {
         status: 404,
         headers: corsHeaders,
       });
@@ -80,20 +76,42 @@ serve(async (req) => {
 
     const quantidade_anterior = material.quantidade_atual;
     let quantidade_nova = quantidade_anterior;
-    let status = 'aprovada'; // Movimentações de Entrada/Ajuste feitas pelo Admin são aprovadas automaticamente
+    const status = 'aprovada';
 
-    // Calcular a nova quantidade
-    if (tipo === 'entrada' || tipo === 'ajuste') {
+    // Calcular nova quantidade baseado no tipo
+    if (tipo === 'entrada') {
+      // Entrada sempre soma
       quantidade_nova = quantidade_anterior + quantidade;
+
     } else if (tipo === 'saida') {
-      // Saídas feitas pelo Admin (ajuste negativo)
+      // Saída sempre subtrai
       quantidade_nova = quantidade_anterior - quantidade;
       if (quantidade_nova < 0) {
-        return new Response(JSON.stringify({ error: 'Estoque insuficiente para esta movimentação de saída/ajuste.' }), {
+        return new Response(JSON.stringify({ 
+          error: `Estoque insuficiente. Disponível: ${quantidade_anterior}. Solicitado: ${quantidade}.` 
+        }), {
           status: 400,
           headers: corsHeaders,
         });
       }
+
+    } else if (tipo === 'ajuste') {
+      // Ajuste pode adicionar ou subtrair baseado em ajuste_tipo
+      if (ajuste_tipo === 'subtrair') {
+        quantidade_nova = quantidade_anterior - quantidade;
+        if (quantidade_nova < 0) {
+          return new Response(JSON.stringify({ 
+            error: `Estoque insuficiente para ajuste. Disponível: ${quantidade_anterior}. Subtração: ${quantidade}.` 
+          }), {
+            status: 400,
+            headers: corsHeaders,
+          });
+        }
+      } else {
+        // adicionar (default)
+        quantidade_nova = quantidade_anterior + quantidade;
+      }
+
     } else {
       return new Response(JSON.stringify({ error: 'Tipo de movimentação inválido.' }), {
         status: 400,
@@ -101,7 +119,7 @@ serve(async (req) => {
       });
     }
 
-    // 2. Executar a transação: Inserir Movimentação e Atualizar Material
+    // Executar transação via RPC
     const { data: movementData, error: movementError } = await supabaseClient.rpc('process_stock_movement', {
       p_material_id: material_id,
       p_user_id: user_id,
@@ -115,8 +133,8 @@ serve(async (req) => {
     });
 
     if (movementError) {
-      console.error('Erro na transação do banco de dados:', movementError.message);
-      return new Response(JSON.stringify({ error: 'Erro ao processar a movimentação de estoque.' }), {
+      console.error('Erro na transação:', movementError.message);
+      return new Response(JSON.stringify({ error: 'Erro ao processar a movimentação.' }), {
         status: 500,
         headers: corsHeaders,
       });

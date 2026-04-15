@@ -29,6 +29,7 @@ const adminMovementSchema = z.object({
   tipo: z.enum(['entrada', 'saida', 'ajuste'], {
     required_error: 'O tipo de movimentação é obrigatório.',
   }),
+  ajuste_tipo: z.enum(['adicionar', 'subtrair']).optional(),
   quantidade: z.coerce.number().min(1, 'A quantidade deve ser maior que zero.'),
   observacao: z.string().optional(),
 });
@@ -47,6 +48,7 @@ const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubm
     defaultValues: {
       material_id: '',
       tipo: 'entrada',
+      ajuste_tipo: 'adicionar',
       quantidade: 1,
       observacao: '',
     },
@@ -55,6 +57,8 @@ const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubm
   const handleSubmit = (values: AdminMovementFormValues) => {
     onSubmit(values);
   };
+
+  const selectedTipo = form.watch('tipo');
 
   return (
     <Form {...form}>
@@ -85,14 +89,17 @@ const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubm
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Tipo de Ação</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={(val) => {
+                  field.onChange(val);
+                  form.setValue('ajuste_tipo', 'adicionar');
+                }} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Tipo de Movimentação" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="entrada">Entrada (Recebimento Direto)</SelectItem>
+                    <SelectItem value="entrada">Entrada (Recebimento)</SelectItem>
                     <SelectItem value="saida">Saída (Retirada Direta)</SelectItem>
                     <SelectItem value="ajuste">Ajuste (Correção de Estoque)</SelectItem>
                   </SelectContent>
@@ -116,6 +123,31 @@ const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubm
             )}
           />
         </div>
+
+        {/* Campo ajuste_tipo aparece apenas quando tipo === 'ajuste' */}
+        {selectedTipo === 'ajuste' && (
+          <FormField
+            control={form.control}
+            name="ajuste_tipo"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tipo de Ajuste</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o tipo de ajuste" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="adicionar">➕ Adicionar ao estoque</SelectItem>
+                    <SelectItem value="subtrair">➖ Subtrair do estoque</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         <FormField
           control={form.control}
