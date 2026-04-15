@@ -26,7 +26,7 @@ import MaterialSearchSelect from './MaterialSearchSelect';
 
 const adminMovementSchema = z.object({
   material_id: z.string().min(1, 'O material é obrigatório.'),
-  tipo: z.enum(['entrada', 'saida', 'ajuste', 'solicitacao_saida'], {
+  tipo: z.enum(['entrada', 'saida', 'ajuste'], {
     required_error: 'O tipo de movimentação é obrigatório.',
   }),
   quantidade: z.coerce.number().min(1, 'A quantidade deve ser maior que zero.'),
@@ -55,9 +55,6 @@ const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubm
   const handleSubmit = (values: AdminMovementFormValues) => {
     onSubmit(values);
   };
-
-  const selectedType = form.watch('tipo');
-  const isWithdrawalRequest = selectedType === 'solicitacao_saida';
 
   return (
     <Form {...form}>
@@ -96,8 +93,8 @@ const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubm
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="entrada">Entrada (Recebimento Direto)</SelectItem>
-                    <SelectItem value="ajuste">Ajuste (Correção de Estoque Direta)</SelectItem>
-                    <SelectItem value="solicitacao_saida">Solicitação de Retirada (Pendente)</SelectItem>
+                    <SelectItem value="saida">Saída (Retirada Direta)</SelectItem>
+                    <SelectItem value="ajuste">Ajuste (Correção de Estoque)</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -127,7 +124,7 @@ const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubm
             <FormItem>
               <FormLabel>Observação (Opcional)</FormLabel>
               <FormControl>
-                <Textarea placeholder="Motivo da movimentação/solicitação..." {...field} />
+                <Textarea placeholder="Motivo da movimentação..." {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -141,7 +138,7 @@ const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubm
               Processando...
             </>
           ) : (
-            isWithdrawalRequest ? 'Criar Solicitação Pendente' : 'Registrar Movimentação Direta'
+            'Registrar Movimentação'
           )}
         </Button>
       </form>
