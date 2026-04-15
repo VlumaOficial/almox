@@ -70,6 +70,7 @@ const MaterialTable: React.FC<MaterialTableProps> = ({ materials, isLoading, onE
             <TableHead>Categoria</TableHead>
             <TableHead className="text-center">Estoque Atual</TableHead>
             <TableHead className="text-center">Estoque Mínimo</TableHead>
+            <TableHead>Localização</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -92,6 +93,7 @@ const MaterialTable: React.FC<MaterialTableProps> = ({ materials, isLoading, onE
                   </div>
                 </TableCell>
                 <TableCell className="text-center">{material.quantidade_minima} {material.unidade_medida}</TableCell>
+                <TableCell>{material.localizacao || "N/A"}</TableCell>
                 <TableCell className="text-right space-x-2">
                   <Button variant="outline" size="icon" onClick={() => onEdit(material)}>
                     <Edit className="h-4 w-4" />
