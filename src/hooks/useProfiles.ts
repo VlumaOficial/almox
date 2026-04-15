@@ -4,9 +4,9 @@ import { UserProfile } from '@/types';
 import { showError, showSuccess } from '@/utils/toast';
 
 const PROFILES_QUERY_KEY = ['profiles'];
-const CREATE_USER_FUNCTION_URL = 'https://xleljhiyuhtvzjlxzawy.supabase.co/functions/v1/create-user';
-const DELETE_USER_FUNCTION_URL = 'https://xleljhiyuhtvzjlxzawy.supabase.co/functions/v1/delete-user';
-const UPDATE_PASSWORD_FUNCTION_URL = 'https://xleljhiyuhtvzjlxzawy.supabase.co/functions/v1/update-user-password';
+const CREATE_USER_FUNCTION_URL = 'https://fuqlwkhucfbhpjlmxaeu.supabase.co/functions/v1/create-user';
+const DELETE_USER_FUNCTION_URL = 'https://fuqlwkhucfbhpjlmxaeu.supabase.co/functions/v1/delete-user';
+const UPDATE_PASSWORD_FUNCTION_URL = 'https://fuqlwkhucfbhpjlmxaeu.supabase.co/functions/v1/update-user-password';
 
 // --- Fetch All Profiles ---
 const fetchProfiles = async (): Promise<UserProfile[]> => {

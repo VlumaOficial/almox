@@ -15,7 +15,7 @@ interface ProcessMovementPayload {
 }
 
 // URL da Edge Function (usando o Project ID fornecido)
-const EDGE_FUNCTION_URL = 'https://xleljhiyuhtvzjlxzawy.supabase.co/functions/v1/process-movement';
+const EDGE_FUNCTION_URL = 'https://fuqlwkhucfbhpjlmxaeu.supabase.co/functions/v1/process-movement';
 
 // --- Fetch History ---
 const fetchMovementsHistory = async (): Promise<MovementWithDetails[]> => {
