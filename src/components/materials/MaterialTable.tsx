@@ -35,10 +35,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const ITEMS_PER_PAGE = 20;
 
-type SortField = 'codigo' | 'nome' | 'categoria' | 'quantidade_atual' | 'quantidade_minima' | 'localizacao';
+type SortField = 'codigo' | 'nome' | 'categoria' | 'quantidade_atual' | 'quantidade_minima' | 'localizacao' | 'created_at';
 type SortDir = 'asc' | 'desc';
 
 interface MaterialTableProps {
@@ -231,6 +233,12 @@ const MaterialTable: React.FC<MaterialTableProps> = ({ materials, isLoading, onE
                 >
                   Localização <SortIcon field="localizacao" />
                 </TableHead>
+                <TableHead
+                  className="cursor-pointer select-none hover:text-primary"
+                  onClick={() => handleSort('created_at')}
+                >
+                  Cadastrado em <SortIcon field="created_at" />
+                </TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -256,6 +264,11 @@ const MaterialTable: React.FC<MaterialTableProps> = ({ materials, isLoading, onE
                       {material.quantidade_minima} {material.unidade_medida}
                     </TableCell>
                     <TableCell>{material.localizacao || 'N/A'}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {material.created_at
+                        ? format(new Date(material.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })
+                        : 'N/A'}
+                    </TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button variant="outline" size="icon" onClick={() => onEdit(material)}>
                         <Edit className="h-4 w-4" />

@@ -15,8 +15,9 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Loader2 } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
-// Esquema de validação usando Zod
 const materialSchema = z.object({
   codigo: z.string().min(1, 'O código é obrigatório.'),
   nome: z.string().min(1, 'O nome é obrigatório.'),
@@ -54,8 +55,6 @@ const MaterialForm: React.FC<MaterialFormProps> = ({ initialData, onSubmit, isPe
   });
 
   const handleSubmit = (values: MaterialFormValues) => {
-    // Se for edição, a quantidade atual não deve ser enviada, pois ela é gerenciada por movimentações.
-    // No entanto, para o primeiro cadastro, permitimos definir a quantidade inicial.
     const payload = {
       ...values,
       quantidade_atual: initialData ? initialData.quantidade_atual : values.quantidade_atual,
@@ -66,6 +65,17 @@ const MaterialForm: React.FC<MaterialFormProps> = ({ initialData, onSubmit, isPe
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+
+        {/* Data de cadastro — apenas na edição */}
+        {initialData?.created_at && (
+          <div className="rounded-md border border-border bg-muted/40 px-4 py-2 text-sm text-muted-foreground">
+            📅 Cadastrado em:{' '}
+            <span className="font-medium text-foreground">
+              {format(new Date(initialData.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+            </span>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
