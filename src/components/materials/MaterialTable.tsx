@@ -10,7 +10,11 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Edit, Trash2, AlertTriangle, Package, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  Edit, Trash2, AlertTriangle, Package,
+  Search, ChevronLeft, ChevronRight,
+  ArrowUpDown, ArrowUp, ArrowDown
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useDeleteMaterial } from '@/hooks/useMaterials';
 import {
@@ -34,6 +38,9 @@ import {
 
 const ITEMS_PER_PAGE = 20;
 
+type SortField = 'codigo' | 'nome' | 'categoria' | 'quantidade_atual' | 'quantidade_minima' | 'localizacao';
+type SortDir = 'asc' | 'desc';
+
 interface MaterialTableProps {
   materials: Material[];
   isLoading: boolean;
@@ -47,30 +54,44 @@ const MaterialTable: React.FC<MaterialTableProps> = ({ materials, isLoading, onE
   const [searchCategoria, setSearchCategoria] = useState('');
   const [searchLocalizacao, setSearchLocalizacao] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortField, setSortField] = useState<SortField>('nome');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
 
-  // Categorias únicas para o filtro
   const categorias = useMemo(() => {
-    const cats = materials
+    return materials
       .map(m => m.categoria)
       .filter(Boolean)
       .filter((v, i, a) => a.indexOf(v) === i)
-      .sort();
-    return cats as string[];
+      .sort() as string[];
   }, [materials]);
 
-  // Localizações únicas para o filtro
   const localizacoes = useMemo(() => {
-    const locs = materials
+    return materials
       .map(m => m.localizacao)
       .filter(Boolean)
       .filter((v, i, a) => a.indexOf(v) === i)
-      .sort();
-    return locs as string[];
+      .sort() as string[];
   }, [materials]);
 
-  // Filtrar materiais
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDir('asc');
+    }
+    setCurrentPage(1);
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="ml-1 h-3 w-3 inline opacity-40" />;
+    return sortDir === 'asc'
+      ? <ArrowUp className="ml-1 h-3 w-3 inline text-primary" />
+      : <ArrowDown className="ml-1 h-3 w-3 inline text-primary" />;
+  };
+
   const filtered = useMemo(() => {
-    return materials.filter(m => {
+    let result = materials.filter(m => {
       const matchNome = searchNome === '' ||
         m.nome.toLowerCase().includes(searchNome.toLowerCase()) ||
         m.codigo.toLowerCase().includes(searchNome.toLowerCase());
@@ -80,16 +101,26 @@ const MaterialTable: React.FC<MaterialTableProps> = ({ materials, isLoading, onE
         m.localizacao === searchLocalizacao;
       return matchNome && matchCategoria && matchLocalizacao;
     });
-  }, [materials, searchNome, searchCategoria, searchLocalizacao]);
 
-  // Paginação
+    result = [...result].sort((a, b) => {
+      let valA: any = a[sortField] ?? '';
+      let valB: any = b[sortField] ?? '';
+      if (typeof valA === 'string') valA = valA.toLowerCase();
+      if (typeof valB === 'string') valB = valB.toLowerCase();
+      if (valA < valB) return sortDir === 'asc' ? -1 : 1;
+      if (valA > valB) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return result;
+  }, [materials, searchNome, searchCategoria, searchLocalizacao, sortField, sortDir]);
+
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginated = filtered.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
 
-  // Reset página ao filtrar
   const handleFilterChange = (setter: (v: string) => void) => (value: string) => {
     setter(value);
     setCurrentPage(1);
@@ -164,12 +195,42 @@ const MaterialTable: React.FC<MaterialTableProps> = ({ materials, isLoading, onE
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Código</TableHead>
-                <TableHead>Nome</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead className="text-center">Estoque Atual</TableHead>
-                <TableHead className="text-center">Estoque Mínimo</TableHead>
-                <TableHead>Localização</TableHead>
+                <TableHead
+                  className="cursor-pointer select-none hover:text-primary"
+                  onClick={() => handleSort('codigo')}
+                >
+                  Código <SortIcon field="codigo" />
+                </TableHead>
+                <TableHead
+                  className="cursor-pointer select-none hover:text-primary"
+                  onClick={() => handleSort('nome')}
+                >
+                  Nome <SortIcon field="nome" />
+                </TableHead>
+                <TableHead
+                  className="cursor-pointer select-none hover:text-primary"
+                  onClick={() => handleSort('categoria')}
+                >
+                  Categoria <SortIcon field="categoria" />
+                </TableHead>
+                <TableHead
+                  className="text-center cursor-pointer select-none hover:text-primary"
+                  onClick={() => handleSort('quantidade_atual')}
+                >
+                  Estoque Atual <SortIcon field="quantidade_atual" />
+                </TableHead>
+                <TableHead
+                  className="text-center cursor-pointer select-none hover:text-primary"
+                  onClick={() => handleSort('quantidade_minima')}
+                >
+                  Estoque Mínimo <SortIcon field="quantidade_minima" />
+                </TableHead>
+                <TableHead
+                  className="cursor-pointer select-none hover:text-primary"
+                  onClick={() => handleSort('localizacao')}
+                >
+                  Localização <SortIcon field="localizacao" />
+                </TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -191,7 +252,9 @@ const MaterialTable: React.FC<MaterialTableProps> = ({ materials, isLoading, onE
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-center">{material.quantidade_minima} {material.unidade_medida}</TableCell>
+                    <TableCell className="text-center">
+                      {material.quantidade_minima} {material.unidade_medida}
+                    </TableCell>
                     <TableCell>{material.localizacao || 'N/A'}</TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button variant="outline" size="icon" onClick={() => onEdit(material)}>
@@ -268,7 +331,9 @@ const MaterialTable: React.FC<MaterialTableProps> = ({ materials, isLoading, onE
             <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
             <AlertDialogDescription>
               Esta ação não pode ser desfeita. Você está prestes a excluir o material:
-              <span className="font-semibold ml-1">{materialToDelete?.nome} ({materialToDelete?.codigo})</span>.
+              <span className="font-semibold ml-1">
+                {materialToDelete?.nome} ({materialToDelete?.codigo})
+              </span>.
               Todas as movimentações associadas a ele serão mantidas, mas o material será removido do estoque.
             </AlertDialogDescription>
           </AlertDialogHeader>
