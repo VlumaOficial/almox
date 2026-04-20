@@ -42,7 +42,7 @@ const fetchMovementsHistory = async (): Promise<MovementWithDetails[]> => {
       material:material_id (nome, codigo, unidade_medida, quantidade_atual),
       user:user_id (nome, email, deleted_at),
       approver:aprovado_por (nome, email, deleted_at),
-      responsavel:responsavel_id (nome, email)
+      responsavel:responsavel_id (id, nome, email)
     `)
     .order('created_at', { ascending: false });
 
@@ -92,7 +92,7 @@ const fetchMyPendingRequests = async (): Promise<MovementWithDetails[]> => {
       material:material_id (nome, codigo, unidade_medida, quantidade_atual),
       user:user_id (nome, email, deleted_at),
       approver:aprovado_por (nome, email, deleted_at),
-      responsavel:responsavel_id (nome, email)
+      responsavel:responsavel_id (id, nome, email)
     `)
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
@@ -140,7 +140,7 @@ const fetchPendingRequests = async (): Promise<MovementWithDetails[]> => {
       material:material_id (nome, codigo, unidade_medida, quantidade_atual),
       user:user_id (nome, email, deleted_at),
       approver:aprovado_por (nome, email, deleted_at),
-      responsavel:responsavel_id (nome, email)
+      responsavel:responsavel_id (id, nome, email)
     `)
     .eq('status', 'pendente')
     .order('created_at', { ascending: true });
