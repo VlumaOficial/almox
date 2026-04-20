@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -11,7 +11,7 @@ import {
   LogOut,
   X,
   ArrowLeftRight,
-  BarChart3, // Importando o ícone de Relatórios
+  BarChart3,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,7 +32,7 @@ const navItems: NavItem[] = [
   { href: '/movimentacoes', label: 'Movimentações', icon: ArrowLeftRight, roles: ['admin', 'consulta'] },
   { href: '/solicitacoes', label: 'Aprovação', icon: ListChecks, roles: ['admin'] },
   { href: '/minhas-solicitacoes', label: 'Minhas Solicitações', icon: ListChecks, roles: ['retirada'] },
-  { href: '/relatorios', label: 'Relatórios', icon: BarChart3, roles: ['admin', 'consulta'] }, // Adicionado Relatórios
+  { href: '/relatorios', label: 'Relatórios', icon: BarChart3, roles: ['admin', 'consulta'] },
   { href: '/usuarios', label: 'Usuários', icon: Users, roles: ['admin'] },
   { href: '/configuracoes', label: 'Configurações', icon: Settings, roles: ['admin'] },
 ];
@@ -46,6 +46,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
   const { profile } = useAuth();
   const { data: logoUrl } = useLogoUrl();
   const isMobile = useIsMobile();
+  const location = useLocation();
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -58,7 +59,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
 
   return (
     <>
-      {/* Overlay para Mobile */}
       {isMobile && isOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
@@ -108,9 +108,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
         </nav>
 
         <div className="p-4 border-t border-sidebar-border">
-          <Button 
-            onClick={handleLogout} 
-            variant="ghost" 
+          <Button
+            onClick={handleLogout}
+            variant="ghost"
             className="w-full justify-start text-destructive hover:bg-destructive/10"
           >
             <LogOut className="mr-3 h-5 w-5" />
