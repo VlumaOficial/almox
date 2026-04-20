@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import MaterialSearchSelect from './MaterialSearchSelect';
+import { useProfiles } from '@/hooks/useProfiles';
 
 const adminMovementSchema = z.object({
   material_id: z.string().min(1, 'O material é obrigatório.'),
@@ -31,7 +32,17 @@ const adminMovementSchema = z.object({
   }),
   ajuste_tipo: z.enum(['adicionar', 'subtrair']).optional(),
   quantidade: z.coerce.number().min(1, 'A quantidade deve ser maior que zero.'),
+  responsavel_id: z.string().optional(),
   observacao: z.string().optional(),
+}).refine((data) => {
+  // responsavel_id obrigatório para saida e ajuste
+  if (data.tipo === 'saida' || data.tipo === 'ajuste') {
+    return !!data.responsavel_id && data.responsavel_id !== '';
+  }
+  return true;
+}, {
+  message: 'O responsável pela retirada é obrigatório para Saída e Ajuste.',
+  path: ['responsavel_id'],
 });
 
 type AdminMovementFormValues = z.infer<typeof adminMovementSchema>;
@@ -43,6 +54,8 @@ interface AdminMovementFormProps {
 }
 
 const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubmit, isPending }) => {
+  const { data: profiles = [] } = useProfiles();
+
   const form = useForm<AdminMovementFormValues>({
     resolver: zodResolver(adminMovementSchema),
     defaultValues: {
@@ -50,6 +63,7 @@ const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubm
       tipo: 'entrada',
       ajuste_tipo: 'adicionar',
       quantidade: 1,
+      responsavel_id: '',
       observacao: '',
     },
   });
@@ -59,6 +73,7 @@ const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubm
   };
 
   const selectedTipo = form.watch('tipo');
+  const showResponsavel = selectedTipo === 'saida' || selectedTipo === 'ajuste';
 
   return (
     <Form {...form}>
@@ -92,6 +107,7 @@ const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubm
                 <Select onValueChange={(val) => {
                   field.onChange(val);
                   form.setValue('ajuste_tipo', 'adicionar');
+                  form.setValue('responsavel_id', '');
                 }} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
@@ -124,7 +140,7 @@ const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubm
           />
         </div>
 
-        {/* Campo ajuste_tipo aparece apenas quando tipo === 'ajuste' */}
+        {/* Tipo de ajuste — aparece apenas quando tipo === 'ajuste' */}
         {selectedTipo === 'ajuste' && (
           <FormField
             control={form.control}
@@ -141,6 +157,36 @@ const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubm
                   <SelectContent>
                     <SelectItem value="adicionar">➕ Adicionar ao estoque</SelectItem>
                     <SelectItem value="subtrair">➖ Subtrair do estoque</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        {/* Responsável — obrigatório para saida e ajuste */}
+        {showResponsavel && (
+          <FormField
+            control={form.control}
+            name="responsavel_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Responsável pela Retirada <span className="text-destructive">*</span>
+                </FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o responsável" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {profiles.map(profile => (
+                      <SelectItem key={profile.id} value={profile.id}>
+                        {profile.nome || profile.email}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />

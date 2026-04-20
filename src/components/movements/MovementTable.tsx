@@ -53,27 +53,20 @@ const MovementTable: React.FC<MovementTableProps> = ({ movements, isLoading }) =
   const [filterDataFim, setFilterDataFim] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Filtrar movimentações
   const filtered = useMemo(() => {
     return movements.filter(m => {
       const matchMaterial = searchMaterial === '' ||
         m.material.nome.toLowerCase().includes(searchMaterial.toLowerCase()) ||
         m.material.codigo.toLowerCase().includes(searchMaterial.toLowerCase());
-
-      const matchTipo = filterTipo === '' || filterTipo === 'todos' ||
-        m.tipo === filterTipo;
-
+      const matchTipo = filterTipo === '' || filterTipo === 'todos' || m.tipo === filterTipo;
       const matchDataInicio = filterDataInicio === '' ||
         new Date(m.created_at) >= new Date(filterDataInicio);
-
       const matchDataFim = filterDataFim === '' ||
         new Date(m.created_at) <= new Date(filterDataFim + 'T23:59:59');
-
       return matchMaterial && matchTipo && matchDataInicio && matchDataFim;
     });
   }, [movements, searchMaterial, filterTipo, filterDataInicio, filterDataFim]);
 
-  // Paginação
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginated = filtered.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
@@ -124,26 +117,21 @@ const MovementTable: React.FC<MovementTableProps> = ({ movements, isLoading }) =
           value={filterDataInicio}
           onChange={e => handleFilterChange(setFilterDataInicio)(e.target.value)}
           className="w-full md:w-44"
-          placeholder="Data início"
         />
         <Input
           type="date"
           value={filterDataFim}
           onChange={e => handleFilterChange(setFilterDataFim)(e.target.value)}
           className="w-full md:w-44"
-          placeholder="Data fim"
         />
         {(searchMaterial || filterTipo || filterDataInicio || filterDataFim) && (
-          <Button
-            variant="outline"
-            onClick={() => {
-              setSearchMaterial('');
-              setFilterTipo('');
-              setFilterDataInicio('');
-              setFilterDataFim('');
-              setCurrentPage(1);
-            }}
-          >
+          <Button variant="outline" onClick={() => {
+            setSearchMaterial('');
+            setFilterTipo('');
+            setFilterDataInicio('');
+            setFilterDataFim('');
+            setCurrentPage(1);
+          }}>
             Limpar
           </Button>
         )}
@@ -171,7 +159,8 @@ const MovementTable: React.FC<MovementTableProps> = ({ movements, isLoading }) =
                   <TableHead>Material</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead className="text-right">Qtd</TableHead>
-                  <TableHead>Usuário</TableHead>
+                  <TableHead>Operador</TableHead>
+                  <TableHead>Responsável</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Observação</TableHead>
                 </TableRow>
@@ -180,7 +169,8 @@ const MovementTable: React.FC<MovementTableProps> = ({ movements, isLoading }) =
                 {paginated.map((movement) => {
                   const typeInfo = typeMap[movement.tipo];
                   const statusInfo = statusMap[movement.status];
-                  const userName = movement.user?.display_name || movement.user?.nome || movement.user?.email || 'Usuário Desconhecido';
+                  const userName = movement.user?.display_name || movement.user?.nome || movement.user?.email || 'N/A';
+                  const responsavelName = (movement as any).responsavel?.display_name || '—';
                   const formattedDate = format(new Date(movement.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR });
                   const isSigned = movement.tipo === 'saida' && movement.assinatura_retirada;
 
@@ -207,6 +197,9 @@ const MovementTable: React.FC<MovementTableProps> = ({ movements, isLoading }) =
                             Aprovado por: {movement.approver?.nome || movement.approver?.email || 'N/A'}
                           </div>
                         )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">{responsavelName}</div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2">

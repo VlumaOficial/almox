@@ -12,6 +12,7 @@ interface ProcessMovementPayload {
   tipo: MovimentacaoTipo;
   quantidade: number;
   ajuste_tipo?: 'adicionar' | 'subtrair';
+  responsavel_id?: string;
   observacao?: string;
 }
 
@@ -40,7 +41,8 @@ const fetchMovementsHistory = async (): Promise<MovementWithDetails[]> => {
       *,
       material:material_id (nome, codigo, unidade_medida, quantidade_atual),
       user:user_id (nome, email, deleted_at),
-      approver:aprovado_por (nome, email, deleted_at)
+      approver:aprovado_por (nome, email, deleted_at),
+      responsavel:responsavel_id (nome, email)
     `)
     .order('created_at', { ascending: false });
 
@@ -62,7 +64,11 @@ const fetchMovementsHistory = async (): Promise<MovementWithDetails[]> => {
       display_name: movement.approver.deleted_at
         ? `${movement.approver.nome || movement.approver.email} (excluído)`
         : movement.approver.nome || movement.approver.email
-    } : null
+    } : null,
+    responsavel: movement.responsavel ? {
+      ...movement.responsavel,
+      display_name: movement.responsavel.nome || movement.responsavel.email
+    } : null,
   }));
 
   return processedData as MovementWithDetails[];
@@ -77,9 +83,7 @@ export const useMovementsHistory = () => {
 
 const fetchMyPendingRequests = async (): Promise<MovementWithDetails[]> => {
   const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (userError || !user) {
-    throw new Error('Usuário não autenticado.');
-  }
+  if (userError || !user) throw new Error('Usuário não autenticado.');
 
   const { data, error } = await supabase
     .from('movimentacoes')
@@ -87,7 +91,8 @@ const fetchMyPendingRequests = async (): Promise<MovementWithDetails[]> => {
       *,
       material:material_id (nome, codigo, unidade_medida, quantidade_atual),
       user:user_id (nome, email, deleted_at),
-      approver:aprovado_por (nome, email, deleted_at)
+      approver:aprovado_por (nome, email, deleted_at),
+      responsavel:responsavel_id (nome, email)
     `)
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
@@ -110,7 +115,11 @@ const fetchMyPendingRequests = async (): Promise<MovementWithDetails[]> => {
       display_name: movement.approver.deleted_at
         ? `${movement.approver.nome || movement.approver.email} (excluído)`
         : movement.approver.nome || movement.approver.email
-    } : null
+    } : null,
+    responsavel: movement.responsavel ? {
+      ...movement.responsavel,
+      display_name: movement.responsavel.nome || movement.responsavel.email
+    } : null,
   }));
 
   return processedData as MovementWithDetails[];
@@ -130,7 +139,8 @@ const fetchPendingRequests = async (): Promise<MovementWithDetails[]> => {
       *,
       material:material_id (nome, codigo, unidade_medida, quantidade_atual),
       user:user_id (nome, email, deleted_at),
-      approver:aprovado_por (nome, email, deleted_at)
+      approver:aprovado_por (nome, email, deleted_at),
+      responsavel:responsavel_id (nome, email)
     `)
     .eq('status', 'pendente')
     .order('created_at', { ascending: true });
@@ -153,7 +163,11 @@ const fetchPendingRequests = async (): Promise<MovementWithDetails[]> => {
       display_name: movement.approver.deleted_at
         ? `${movement.approver.nome || movement.approver.email} (excluído)`
         : movement.approver.nome || movement.approver.email
-    } : null
+    } : null,
+    responsavel: movement.responsavel ? {
+      ...movement.responsavel,
+      display_name: movement.responsavel.nome || movement.responsavel.email
+    } : null,
   }));
 
   return processedData as MovementWithDetails[];
@@ -173,10 +187,7 @@ interface UpdateStatusPayload {
 
 const updateMovementStatus = async ({ movementId, status }: UpdateStatusPayload): Promise<Movimentacao> => {
   const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-  if (userError || !user) {
-    throw new Error('Usuário não autenticado.');
-  }
+  if (userError || !user) throw new Error('Usuário não autenticado.');
 
   const { data: movement, error: fetchError } = await supabase
     .from('movimentacoes')
@@ -184,9 +195,7 @@ const updateMovementStatus = async ({ movementId, status }: UpdateStatusPayload)
     .eq('id', movementId)
     .single();
 
-  if (fetchError || !movement) {
-    throw new Error('Movimentação não encontrada.');
-  }
+  if (fetchError || !movement) throw new Error('Movimentação não encontrada.');
 
   const material_id = movement.material_id;
   const quantidade_anterior = (movement.material as any).quantidade_atual;
@@ -211,17 +220,15 @@ const updateMovementStatus = async ({ movementId, status }: UpdateStatusPayload)
       .update({ quantidade_atual: quantidade_nova, updated_at: new Date().toISOString() })
       .eq('id', material_id);
 
-    if (materialUpdateError) {
-      throw new Error('Erro ao atualizar estoque: ' + materialUpdateError.message);
-    }
+    if (materialUpdateError) throw new Error('Erro ao atualizar estoque: ' + materialUpdateError.message);
   }
 
   const { data, error } = await supabase
     .from('movimentacoes')
     .update({
-      status: status,
-      quantidade_anterior: quantidade_anterior,
-      quantidade_nova: quantidade_nova,
+      status,
+      quantidade_anterior,
+      quantidade_nova,
       aprovado_por: user.id,
       aprovado_at: new Date().toISOString()
     })
@@ -229,9 +236,7 @@ const updateMovementStatus = async ({ movementId, status }: UpdateStatusPayload)
     .select()
     .single();
 
-  if (error) {
-    throw new Error('Erro ao atualizar status: ' + error.message);
-  }
+  if (error) throw new Error('Erro ao atualizar status: ' + error.message);
   return data as Movimentacao;
 };
 
@@ -261,10 +266,7 @@ interface UserRequestPayload {
 
 const createUserRequest = async (payload: UserRequestPayload): Promise<Movimentacao> => {
   const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-  if (userError || !user) {
-    throw new Error('Usuário não autenticado.');
-  }
+  if (userError || !user) throw new Error('Usuário não autenticado.');
 
   const organization_id = await getUserOrganizationId();
 
@@ -284,9 +286,7 @@ const createUserRequest = async (payload: UserRequestPayload): Promise<Movimenta
     .select()
     .single();
 
-  if (error) {
-    throw new Error(error.message);
-  }
+  if (error) throw new Error(error.message);
   return data as Movimentacao;
 };
 
@@ -308,10 +308,7 @@ export const useCreateUserRequest = () => {
 
 const processMovement = async (payload: ProcessMovementPayload): Promise<Movimentacao> => {
   const { data: { session } } = await supabase.auth.getSession();
-
-  if (!session) {
-    throw new Error('Usuário não autenticado.');
-  }
+  if (!session) throw new Error('Usuário não autenticado.');
 
   const response = await fetch(EDGE_FUNCTION_URL, {
     method: 'POST',
@@ -326,11 +323,7 @@ const processMovement = async (payload: ProcessMovementPayload): Promise<Movimen
   });
 
   const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.error || 'Erro desconhecido ao processar movimentação.');
-  }
-
+  if (!response.ok) throw new Error(result.error || 'Erro desconhecido ao processar movimentação.');
   return result.movement[0] as Movimentacao;
 };
 
@@ -357,10 +350,7 @@ interface AddSignaturePayload {
 
 const addSignatureToMovement = async ({ movementId, signature }: AddSignaturePayload): Promise<Movimentacao> => {
   const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-  if (userError || !user) {
-    throw new Error('Usuário não autenticado.');
-  }
+  if (userError || !user) throw new Error('Usuário não autenticado.');
 
   const { data, error } = await supabase
     .from('movimentacoes')
@@ -372,9 +362,7 @@ const addSignatureToMovement = async ({ movementId, signature }: AddSignaturePay
     .select()
     .single();
 
-  if (error) {
-    throw new Error('Erro ao registrar assinatura: ' + error.message);
-  }
+  if (error) throw new Error('Erro ao registrar assinatura: ' + error.message);
   return data as Movimentacao;
 };
 
