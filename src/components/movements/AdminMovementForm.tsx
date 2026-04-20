@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MapPin } from 'lucide-react';
 import MaterialSearchSelect from './MaterialSearchSelect';
 import { useProfiles } from '@/hooks/useProfiles';
 
@@ -35,7 +35,6 @@ const adminMovementSchema = z.object({
   responsavel_id: z.string().optional(),
   observacao: z.string().optional(),
 }).refine((data) => {
-  // responsavel_id obrigatório para saida e ajuste
   if (data.tipo === 'saida' || data.tipo === 'ajuste') {
     return !!data.responsavel_id && data.responsavel_id !== '';
   }
@@ -55,6 +54,7 @@ interface AdminMovementFormProps {
 
 const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubmit, isPending }) => {
   const { data: profiles = [] } = useProfiles();
+  const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
 
   const form = useForm<AdminMovementFormValues>({
     resolver: zodResolver(adminMovementSchema),
@@ -75,6 +75,12 @@ const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubm
   const selectedTipo = form.watch('tipo');
   const showResponsavel = selectedTipo === 'saida' || selectedTipo === 'ajuste';
 
+  const handleMaterialChange = (value: string) => {
+    form.setValue('material_id', value);
+    const material = materials.find(m => m.id === value) || null;
+    setSelectedMaterial(material);
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -89,7 +95,7 @@ const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubm
                   <MaterialSearchSelect
                     materials={materials}
                     value={field.value}
-                    onChange={field.onChange}
+                    onChange={handleMaterialChange}
                     showStock={false}
                   />
                 </FormControl>
@@ -140,7 +146,23 @@ const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubm
           />
         </div>
 
-        {/* Tipo de ajuste — aparece apenas quando tipo === 'ajuste' */}
+        {/* Localização do material selecionado */}
+        {selectedMaterial && (
+          <div className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-4 py-2 text-sm">
+            <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span className="text-muted-foreground">Localização:</span>
+            <span className="font-medium text-foreground">
+              {selectedMaterial.localizacao || 'Não informada'}
+            </span>
+            <span className="mx-2 text-muted-foreground">|</span>
+            <span className="text-muted-foreground">Estoque atual:</span>
+            <span className="font-medium text-foreground">
+              {selectedMaterial.quantidade_atual} {selectedMaterial.unidade_medida}
+            </span>
+          </div>
+        )}
+
+        {/* Tipo de ajuste */}
         {selectedTipo === 'ajuste' && (
           <FormField
             control={form.control}
