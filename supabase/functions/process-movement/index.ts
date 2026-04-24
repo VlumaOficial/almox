@@ -15,6 +15,7 @@ interface MovementPayload {
   ajuste_tipo?: 'adicionar' | 'subtrair';
   observacao?: string;
   responsavel_id?: string;
+  data_movimentacao?: string;
 }
 
 serve(async (req) => {
@@ -44,7 +45,7 @@ serve(async (req) => {
     }
 
     const body: MovementPayload = await req.json();
-    const { material_id, tipo, quantidade, ajuste_tipo, observacao, responsavel_id } = body;
+    const { material_id, tipo, quantidade, ajuste_tipo, observacao, responsavel_id, data_movimentacao } = body;
     const user_id = user.id;
 
     if (!material_id || !tipo || typeof quantidade !== 'number' || quantidade <= 0) {
@@ -53,7 +54,6 @@ serve(async (req) => {
       });
     }
 
-    // Buscar quantidade atual do material
     const { data: material, error: fetchError } = await supabaseClient
       .from('materiais')
       .select('quantidade_atual')
@@ -96,7 +96,6 @@ serve(async (req) => {
       });
     }
 
-    // Executar transação via RPC
     const { data: movementData, error: movementError } = await supabaseClient.rpc('process_stock_movement', {
       p_material_id: material_id,
       p_user_id: user_id,
@@ -108,6 +107,7 @@ serve(async (req) => {
       p_status: status,
       p_aprovado_por: user_id,
       p_responsavel_id: responsavel_id || null,
+      p_data_movimentacao: data_movimentacao || new Date().toISOString(),
     });
 
     if (movementError) {

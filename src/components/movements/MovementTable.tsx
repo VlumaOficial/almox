@@ -171,7 +171,7 @@ const MovementTable: React.FC<MovementTableProps> = ({ movements, isLoading }) =
                   const statusInfo = statusMap[movement.status];
                   const userName = movement.user?.display_name || movement.user?.nome || movement.user?.email || 'N/A';
                   const responsavelName = (movement as any).responsavel?.display_name || '—';
-                  const formattedDate = format(new Date(movement.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR });
+                  const formattedDate = format(new Date((movement as any).data_movimentacao || movement.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR });
                   const isSigned = movement.tipo === 'saida' && movement.assinatura_retirada;
 
                   return (

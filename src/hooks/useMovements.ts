@@ -13,6 +13,7 @@ interface ProcessMovementPayload {
   quantidade: number;
   ajuste_tipo?: 'adicionar' | 'subtrair';
   responsavel_id?: string;
+  data_movimentacao?: string;
   observacao?: string;
 }
 

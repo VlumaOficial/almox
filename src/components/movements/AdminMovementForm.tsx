@@ -24,6 +24,7 @@ import {
 import { Loader2, MapPin } from 'lucide-react';
 import MaterialSearchSelect from './MaterialSearchSelect';
 import { useProfiles } from '@/hooks/useProfiles';
+import { format } from 'date-fns';
 
 const adminMovementSchema = z.object({
   material_id: z.string().min(1, 'O material é obrigatório.'),
@@ -33,6 +34,7 @@ const adminMovementSchema = z.object({
   ajuste_tipo: z.enum(['adicionar', 'subtrair']).optional(),
   quantidade: z.coerce.number().min(1, 'A quantidade deve ser maior que zero.'),
   responsavel_id: z.string().optional(),
+  data_movimentacao: z.string().min(1, 'A data é obrigatória.'),
   observacao: z.string().optional(),
 }).refine((data) => {
   if (data.tipo === 'saida' || data.tipo === 'ajuste') {
@@ -52,6 +54,13 @@ interface AdminMovementFormProps {
   isPending: boolean;
 }
 
+const getNowLocal = () => {
+  const now = new Date();
+  const offset = now.getTimezoneOffset();
+  const local = new Date(now.getTime() - offset * 60000);
+  return local.toISOString().slice(0, 16);
+};
+
 const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubmit, isPending }) => {
   const { data: profiles = [] } = useProfiles();
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
@@ -64,6 +73,7 @@ const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubm
       ajuste_tipo: 'adicionar',
       quantidade: 1,
       responsavel_id: '',
+      data_movimentacao: getNowLocal(),
       observacao: '',
     },
   });
@@ -146,6 +156,24 @@ const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubm
           />
         </div>
 
+        {/* Data da movimentação */}
+        <FormField
+          control={form.control}
+          name="data_movimentacao"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Data da Movimentação</FormLabel>
+              <FormControl>
+                <Input
+                  type="datetime-local"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         {/* Localização do material selecionado */}
         {selectedMaterial && (
           <div className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-4 py-2 text-sm">
@@ -187,7 +215,7 @@ const AdminMovementForm: React.FC<AdminMovementFormProps> = ({ materials, onSubm
           />
         )}
 
-        {/* Responsável — obrigatório para saida e ajuste */}
+        {/* Responsável */}
         {showResponsavel && (
           <FormField
             control={form.control}
