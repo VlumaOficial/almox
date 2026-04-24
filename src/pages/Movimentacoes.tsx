@@ -45,6 +45,7 @@ const Movimentacoes = () => {
       quantidade: values.quantidade,
       ajuste_tipo: values.ajuste_tipo,
       observacao: values.observacao,
+      responsavel_id: values.responsavel_id,
     }, {
       onSuccess: () => {
         setIsDialogOpen(false);
